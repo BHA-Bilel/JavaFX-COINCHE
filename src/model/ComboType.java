@@ -30,15 +30,17 @@ public enum ComboType {
 
     @Override
     public String toString() {
-        return switch (this) {
-            case JackCarre -> "Carr\u00E9 Valets";
-            case NineCarre -> "Carr\u00E9 Neufs";
-            case Carre -> "Carr\u00E9";
-            case Suite -> "Suite";
-            case Annonce -> "Annonce";
-            case Tierce -> "Tierce";
-            case Belote -> "Belote";
-        };
+        switch (this) {
+            case JackCarre :return  "Carr\u00E9 Valets";
+            case NineCarre :return  "Carr\u00E9 Neufs";
+            case Carre :return  "Carr\u00E9";
+            case Suite :return  "Suite";
+            case Annonce :return  "Annonce";
+            case Tierce :return  "Tierce";
+            case Belote :return  "Belote";
+            default:
+                return "";
+        }
     }
 
 }

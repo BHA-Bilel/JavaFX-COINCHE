@@ -89,10 +89,18 @@ public class Assets {
     public static ImageView getSign(Suit suit) {
         Image image = null;
         switch (suit) {
-            case Hearts -> image = SwingFXUtils.toFXImage(ImageLoader.loadImage("/textures/H.png"), null);
-            case Spades -> image = SwingFXUtils.toFXImage(ImageLoader.loadImage("/textures/S.png"), null);
-            case Diamonds -> image = SwingFXUtils.toFXImage(ImageLoader.loadImage("/textures/D.png"), null);
-            case Clubs -> image = SwingFXUtils.toFXImage(ImageLoader.loadImage("/textures/C.png"), null);
+            case Hearts : {
+                image = SwingFXUtils.toFXImage(ImageLoader.loadImage("/textures/H.png"), null);break;
+            }
+            case Spades : {
+                image = SwingFXUtils.toFXImage(ImageLoader.loadImage("/textures/S.png"), null);break;
+            }
+            case Diamonds : {
+                image = SwingFXUtils.toFXImage(ImageLoader.loadImage("/textures/D.png"), null);break;
+            }
+            case Clubs: {
+                image = SwingFXUtils.toFXImage(ImageLoader.loadImage("/textures/C.png"), null);break;
+            }
         }
         ImageView iv = new ImageView();
         iv.setImage(image);

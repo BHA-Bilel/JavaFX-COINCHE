@@ -1,24 +1,24 @@
 package game;
 
+import gfx.Assets;
+import gfx.Board;
+import gfx.LeftRightPane;
+import gfx.TopBottomPane;
+import javafx.animation.AnimationTimer;
+import javafx.application.Platform;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.BorderPane;
+import model.*;
+import shared.RoomPosition;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.*;
-
-import gfx.Assets;
-import gfx.Board;
-import gfx.LeftRightPane;
-import gfx.TopBottomPane;
-import javafx.scene.control.Alert;
-import javafx.scene.input.KeyCode;
-import model.*;
-import javafx.animation.AnimationTimer;
-import javafx.application.Platform;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.layout.BorderPane;
-import shared.RoomPosition;
 
 public class GameApp extends BorderPane {
 

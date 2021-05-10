@@ -4,21 +4,33 @@ public enum RoomPosition {
     BOTTOM, RIGHT, TOP, LEFT;
 
     public static RoomPosition getPositionBasedOnPlayerPosition(RoomPosition my_pos, RoomPosition position) {
-        return switch (my_pos) {
-            case BOTTOM -> position;
-            case LEFT -> position.next();
-            case TOP -> position.next().next();
-            case RIGHT -> position.next().next().next();
-        };
+        switch (my_pos) {
+            case BOTTOM:
+                return position;
+            case LEFT:
+                return position.next();
+            case TOP:
+                return position.next().next();
+            case RIGHT:
+                return position.next().next().next();
+            default:
+                return null;
+        }
     }
 
     public RoomPosition teammate_with() {
-        return switch (this) {
-            case BOTTOM -> TOP;
-            case LEFT -> RIGHT;
-            case TOP -> BOTTOM;
-            case RIGHT -> LEFT;
-        };
+        switch (this) {
+            case BOTTOM:
+                return TOP;
+            case LEFT:
+                return RIGHT;
+            case TOP:
+                return BOTTOM;
+            case RIGHT:
+                return LEFT;
+            default:
+                return null;
+        }
     }
 
     public static RoomPosition getPositionByPlayerID(int playerID) {
@@ -35,18 +47,24 @@ public enum RoomPosition {
     }
 
     public RoomPosition next() {
-        return switch (this) {
-            case BOTTOM -> RIGHT;
-            case RIGHT -> TOP;
-            case TOP -> LEFT;
-            case LEFT -> BOTTOM;
-        };
+        switch (this) {
+            case BOTTOM:
+                return RIGHT;
+            case RIGHT:
+                return TOP;
+            case TOP:
+                return LEFT;
+            case LEFT:
+                return BOTTOM;
+            default:
+                return null;
+        }
     }
 
     public static RoomPosition getCurrentPositionByPlayerID(RoomPosition yourPosition, int position) {
         // relevant to player position (translated position)
         switch (yourPosition) {
-            case BOTTOM -> {
+            case BOTTOM: {
                 if (position == 1)
                     return BOTTOM;
                 else if (position == 2) {
@@ -57,7 +75,7 @@ public enum RoomPosition {
                     return LEFT;
                 }
             }
-            case RIGHT -> {
+            case RIGHT: {
                 if (position == 1)
                     return LEFT;
                 else if (position == 2) {
@@ -68,7 +86,7 @@ public enum RoomPosition {
                     return TOP;
                 }
             }
-            case TOP -> {
+            case TOP: {
                 if (position == 1)
                     return TOP;
                 else if (position == 2) {
@@ -79,7 +97,7 @@ public enum RoomPosition {
                     return RIGHT;
                 }
             }
-            case LEFT -> {
+            case LEFT: {
                 if (position == 1)
                     return RIGHT;
                 else if (position == 2) {

@@ -91,21 +91,25 @@ public class Board extends StackPane {
         } else if (bid > 0 || capot && first_capot_bid == 0) {
             passCount = 0;
             switch (currentPosition) {
-                case BOTTOM -> {
+                case BOTTOM: {
                     handler.getGame().getBottomPane().bought(anySuit, bid, capot);
                     latestBid = handler.getGame().getBottomPane().getBid();
+                    break;
                 }
-                case RIGHT -> {
+                case RIGHT: {
                     handler.getGame().getRightPane().bought(anySuit, bid, capot);
                     latestBid = handler.getGame().getRightPane().getBid();
+                    break;
                 }
-                case TOP -> {
+                case TOP: {
                     handler.getGame().getTopPane().bought(anySuit, bid, capot);
                     latestBid = handler.getGame().getTopPane().getBid();
+                    break;
                 }
-                case LEFT -> {
+                case LEFT: {
                     handler.getGame().getLeftPane().bought(anySuit, bid, capot);
                     latestBid = handler.getGame().getLeftPane().getBid();
+                    break;
                 }
             }
             first_capot_bid = capot ? 1 : 0;
@@ -141,28 +145,64 @@ public class Board extends StackPane {
 
     public void pass(RoomPosition position) {
         switch (position) {
-            case BOTTOM -> handler.getGame().getBottomPane().pass_turn();
-            case RIGHT -> handler.getGame().getRightPane().pass_turn();
-            case TOP -> handler.getGame().getTopPane().pass_turn();
-            case LEFT -> handler.getGame().getLeftPane().pass_turn();
+            case BOTTOM: {
+                handler.getGame().getBottomPane().pass_turn();
+                break;
+            }
+            case RIGHT: {
+                handler.getGame().getRightPane().pass_turn();
+                break;
+            }
+            case TOP: {
+                handler.getGame().getTopPane().pass_turn();
+                break;
+            }
+            case LEFT: {
+                handler.getGame().getLeftPane().pass_turn();
+                break;
+            }
         }
     }
 
     public void coinched(RoomPosition position) {
         switch (position) {
-            case BOTTOM -> handler.getGame().getBottomPane().setCoinche(true);
-            case RIGHT -> handler.getGame().getRightPane().setCoinche(true);
-            case TOP -> handler.getGame().getTopPane().setCoinche(true);
-            case LEFT -> handler.getGame().getLeftPane().setCoinche(true);
+            case BOTTOM: {
+                handler.getGame().getBottomPane().setCoinche(true);
+                break;
+            }
+            case RIGHT: {
+                handler.getGame().getRightPane().setCoinche(true);
+                break;
+            }
+            case TOP: {
+                handler.getGame().getTopPane().setCoinche(true);
+                break;
+            }
+            case LEFT: {
+                handler.getGame().getLeftPane().setCoinche(true);
+                break;
+            }
         }
     }
 
     public void surcoinched(RoomPosition position) {
         switch (position) {
-            case BOTTOM -> handler.getGame().getBottomPane().setCoinche(false);
-            case RIGHT -> handler.getGame().getRightPane().setCoinche(false);
-            case TOP -> handler.getGame().getTopPane().setCoinche(false);
-            case LEFT -> handler.getGame().getLeftPane().setCoinche(false);
+            case BOTTOM: {
+                handler.getGame().getBottomPane().setCoinche(false);
+                break;
+            }
+            case RIGHT: {
+                handler.getGame().getRightPane().setCoinche(false);
+                break;
+            }
+            case TOP: {
+                handler.getGame().getTopPane().setCoinche(false);
+                break;
+            }
+            case LEFT: {
+                handler.getGame().getLeftPane().setCoinche(false);
+                break;
+            }
         }
     }
 
@@ -233,26 +273,30 @@ public class Board extends StackPane {
         int beloteId = 0;
         List<Combination> declarations = null;
         switch (handler.getGame().getCurrentPosition()) {
-            case BOTTOM -> {
+            case BOTTOM: {
                 handler.getGame().getPlayThread().send(card.getSuit().getIndex(), card.getRank().getIndex());
                 bottomCard = card;
                 declarations = handler.getGame().getBottomPane().getPlayer().getDeclarations();
                 beloteId = handler.getGame().getBottomPane().checkForBelote() ? 1 : -1;
+                break;
             }
-            case RIGHT -> {
+            case RIGHT: {
                 rightCard = card;
                 declarations = handler.getGame().getRightPane().getPlayer().getDeclarations();
                 beloteId = handler.getGame().getRightPane().checkForBelote() ? 2 : -1;
+                break;
             }
-            case TOP -> {
+            case TOP: {
                 topCard = card;
                 declarations = handler.getGame().getTopPane().getPlayer().getDeclarations();
                 beloteId = handler.getGame().getTopPane().checkForBelote() ? 1 : -1;
+                break;
             }
-            case LEFT -> {
+            case LEFT: {
                 leftCard = card;
                 declarations = handler.getGame().getLeftPane().getPlayer().getDeclarations();
                 beloteId = handler.getGame().getLeftPane().checkForBelote() ? 2 : -1;
+                break;
             }
         }
         handler.getGame().removeCard();

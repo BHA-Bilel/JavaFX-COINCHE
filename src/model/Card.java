@@ -56,21 +56,45 @@ public class Card extends StackPane {
             List<Card> cards = new ArrayList<>();
 
             switch (demanded.getSuit()) {
-                case Hearts -> cards = handler.getGame().getBottomPane().getPlayer().getHand().getHearts();
-                case Spades -> cards = handler.getGame().getBottomPane().getPlayer().getHand().getSpades();
-                case Diamonds -> cards = handler.getGame().getBottomPane().getPlayer().getHand().getDiamonds();
-                case Clubs -> cards = handler.getGame().getBottomPane().getPlayer().getHand().getClubs();
-                case SA, TA -> {
+                case Hearts: {
+                    cards = handler.getGame().getBottomPane().getPlayer().getHand().getHearts();
+                    break;
+                }
+                case Spades: {
+                    cards = handler.getGame().getBottomPane().getPlayer().getHand().getSpades();
+                    break;
+                }
+                case Diamonds: {
+                    cards = handler.getGame().getBottomPane().getPlayer().getHand().getDiamonds();
+                    break;
+                }
+                case Clubs: {
+                    cards = handler.getGame().getBottomPane().getPlayer().getHand().getClubs();
+                    break;
+                }
+                default: {
                 }
             }
 
             List<Card> trumpCards = null;
             switch (trump) {
-                case Hearts -> trumpCards = handler.getGame().getBottomPane().getPlayer().getHand().getHearts();
-                case Spades -> trumpCards = handler.getGame().getBottomPane().getPlayer().getHand().getSpades();
-                case Diamonds -> trumpCards = handler.getGame().getBottomPane().getPlayer().getHand().getDiamonds();
-                case Clubs -> trumpCards = handler.getGame().getBottomPane().getPlayer().getHand().getClubs();
-                case SA, TA -> {
+                case Hearts: {
+                    trumpCards = handler.getGame().getBottomPane().getPlayer().getHand().getHearts();
+                    break;
+                }
+                case Spades: {
+                    trumpCards = handler.getGame().getBottomPane().getPlayer().getHand().getSpades();
+                    break;
+                }
+                case Diamonds: {
+                    trumpCards = handler.getGame().getBottomPane().getPlayer().getHand().getDiamonds();
+                    break;
+                }
+                case Clubs: {
+                    trumpCards = handler.getGame().getBottomPane().getPlayer().getHand().getClubs();
+                    break;
+                }
+                default: {
                 }
             }
 

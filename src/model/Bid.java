@@ -48,8 +48,16 @@ public class Bid extends VBox {
         Platform.runLater(() -> {
             if (latestBid.equals(this)) {
                 switch (position) {
-                    case TOP -> text.setText(text.getText() + " Surcoinche! ");
-                    case LEFT, RIGHT, BOTTOM -> text.setText("Surcoinche!\n" + text.getText());
+                    case TOP: {
+                        text.setText(text.getText() + " Surcoinche! ");
+                        break;
+                    }
+                    case LEFT:
+                    case RIGHT:
+                    case BOTTOM: {
+                        text.setText("Surcoinche!\n" + text.getText());
+                        break;
+                    }
                 }
             } else {
                 text.setText(coincheOnly ? "Coinche!" : "Surcoinche!");
@@ -68,7 +76,7 @@ public class Bid extends VBox {
     }
 
     public void hide_unnecessary_bids(Bid latestBid) {
-        boolean keep = this.equals(latestBid) || text.getText().contains("Coinche !") || text.getText().contains("Surcoinche !");
+        boolean keep = this.equals(latestBid) || text.getText().contains("Coinche") || text.getText().contains("Surcoinche");
         if (!keep) {
             Platform.runLater(() -> setOpacity(0));
         }
@@ -179,8 +187,16 @@ public class Bid extends VBox {
         }
         if (trump.getIndex() > 3)
             switch (position) {
-                case TOP, BOTTOM -> ret += " " + trump;
-                case LEFT, RIGHT -> ret += "\n" + trump;
+                case TOP:
+                case BOTTOM: {
+                    ret += " " + trump;
+                    break;
+                }
+                case LEFT:
+                case RIGHT: {
+                    ret += "\n" + trump;
+                    break;
+                }
             }
         return ret;
     }

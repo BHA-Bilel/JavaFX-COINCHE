@@ -258,21 +258,21 @@ public class SecondPhaseGUI extends GridPane {
 
     public void setup_first_turn() {
         switch (handler.getGame().getCurrentPosition()) {
-            case BOTTOM -> {
+            case BOTTOM : {
                 current_turn = bottomTurn;
-                starting_pos = prevBTurn;
+                starting_pos = prevBTurn;break;
             }
-            case RIGHT -> {
+            case RIGHT : {
                 current_turn = rightTurn;
-                starting_pos = prevRTurn;
+                starting_pos = prevRTurn;break;
             }
-            case TOP -> {
+            case TOP : {
                 current_turn = topTurn;
-                starting_pos = prevTTurn;
+                starting_pos = prevTTurn;break;
             }
-            case LEFT -> {
+            case LEFT : {
                 current_turn = leftTurn;
-                starting_pos = prevLTurn;
+                starting_pos = prevLTurn;break;
             }
         }
         current_turn.init_turn();
@@ -298,38 +298,39 @@ public class SecondPhaseGUI extends GridPane {
             timeLine = my_timeLine.timeLine;
         }
         switch (card.getPosition()) {
-            case BOTTOM -> {
+            case BOTTOM : {
                 bcard.setTranslateY(30);
                 timeLine.getKeyFrames().add(
                         new KeyFrame(Duration.seconds(1),
                                 new KeyValue(bcard.translateYProperty(), 0, Interpolator.EASE_IN)));
                 timeLine.getKeyFrames().add(
                         new KeyFrame(Duration.seconds(1), new KeyValue(bcard.opacityProperty(), 1)));
+                break;
             }
-            case RIGHT -> {
+            case RIGHT: {
                 rcard.setTranslateX(30);
                 timeLine.getKeyFrames().add(
                         new KeyFrame(Duration.seconds(1),
                                 new KeyValue(rcard.translateXProperty(), 0, Interpolator.EASE_IN)));
                 timeLine.getKeyFrames().add(
                         new KeyFrame(Duration.seconds(1), new KeyValue(rcard.opacityProperty(), 1)));
-            }
-            case TOP -> {
+                break;}
+            case TOP : {
                 tcard.setTranslateY(-30);
                 timeLine.getKeyFrames().add(
                         new KeyFrame(Duration.seconds(1),
                                 new KeyValue(tcard.translateYProperty(), 0, Interpolator.EASE_IN)));
                 timeLine.getKeyFrames().add(
                         new KeyFrame(Duration.seconds(1), new KeyValue(tcard.opacityProperty(), 1)));
-            }
-            case LEFT -> {
+                break; }
+            case LEFT : {
                 lcard.setTranslateX(-30);
                 timeLine.getKeyFrames().add(
                         new KeyFrame(Duration.seconds(1),
                                 new KeyValue(lcard.translateXProperty(), 0, Interpolator.EASE_IN)));
                 timeLine.getKeyFrames().add(
                         new KeyFrame(Duration.seconds(1), new KeyValue(lcard.opacityProperty(), 1)));
-            }
+                break;  }
         }
         if (last_card_played) {
             EventHandler<ActionEvent> eventHandler = e -> {
@@ -340,10 +341,22 @@ public class SecondPhaseGUI extends GridPane {
         timeLine.setAutoReverse(false);
         timeLine.setCycleCount(1);
         switch (card.getPosition()) {
-            case BOTTOM -> bcard.setImage(card.getImage());
-            case RIGHT -> rcard.setImage(card.getImage());
-            case TOP -> tcard.setImage(card.getImage());
-            case LEFT -> lcard.setImage(card.getImage());
+            case BOTTOM : {
+                bcard.setImage(card.getImage());
+                break;
+            }
+            case RIGHT : {
+                rcard.setImage(card.getImage());
+                break;
+            }
+            case TOP : {
+                tcard.setImage(card.getImage());
+                break;
+            }
+            case LEFT : {
+                lcard.setImage(card.getImage());
+                break;
+            }
         }
         timeLine.setOnFinished(e -> annonceThread.start());
         my_timeLine.play();
@@ -352,10 +365,22 @@ public class SecondPhaseGUI extends GridPane {
     public void clear(RoomPosition demanded_pos, boolean der) {
         Timeline timeLine = null;
         switch (handler.getGame().getCurrentPosition()) { // winner position
-            case BOTTOM -> timeLine = slide_cards_bottom();
-            case RIGHT -> timeLine = slide_cards_right();
-            case TOP -> timeLine = slide_cards_top();
-            case LEFT -> timeLine = slide_cards_left();
+            case BOTTOM : {
+                timeLine = slide_cards_bottom();
+                break;
+            }
+            case RIGHT : {
+                timeLine = slide_cards_right();
+                break;
+            }
+            case TOP : {
+                timeLine = slide_cards_top();
+                break;
+            }
+            case LEFT : {
+                timeLine = slide_cards_left();
+                break;
+            }
         }
         timeLine.setAutoReverse(false);
         timeLine.setCycleCount(1);
@@ -599,41 +624,41 @@ public class SecondPhaseGUI extends GridPane {
             timeLine = my_timeLine.timeLine;
         }
         switch (who) {
-            case BOTTOM -> {
+            case BOTTOM: {
                 my_timeLine.put_text(bsay, what);
                 bsay.setTranslateY(30);
                 timeLine.getKeyFrames().add(
                         new KeyFrame(Duration.seconds(1),
                                 new KeyValue(bsay.translateYProperty(), 0, Interpolator.EASE_IN)));
                 timeLine.getKeyFrames().add(
-                        new KeyFrame(Duration.seconds(1), new KeyValue(bsay.opacityProperty(), 1)));
+                        new KeyFrame(Duration.seconds(1), new KeyValue(bsay.opacityProperty(), 1)));break;
             }
-            case RIGHT -> {
+            case RIGHT : {
                 my_timeLine.put_text(rsay, what);
                 rsay.setTranslateX(30);
                 timeLine.getKeyFrames().add(
                         new KeyFrame(Duration.seconds(1),
                                 new KeyValue(rsay.translateXProperty(), 0, Interpolator.EASE_IN)));
                 timeLine.getKeyFrames().add(
-                        new KeyFrame(Duration.seconds(1), new KeyValue(rsay.opacityProperty(), 1)));
+                        new KeyFrame(Duration.seconds(1), new KeyValue(rsay.opacityProperty(), 1)));break;
             }
-            case TOP -> {
+            case TOP : {
                 my_timeLine.put_text(tsay, what);
                 tsay.setTranslateY(-30);
                 timeLine.getKeyFrames().add(
                         new KeyFrame(Duration.seconds(1),
                                 new KeyValue(tsay.translateYProperty(), 0, Interpolator.EASE_IN)));
                 timeLine.getKeyFrames().add(
-                        new KeyFrame(Duration.seconds(1), new KeyValue(tsay.opacityProperty(), 1)));
+                        new KeyFrame(Duration.seconds(1), new KeyValue(tsay.opacityProperty(), 1)));break;
             }
-            case LEFT -> {
+            case LEFT : {
                 my_timeLine.put_text(lsay, what);
                 lsay.setTranslateX(-30);
                 timeLine.getKeyFrames().add(
                         new KeyFrame(Duration.seconds(1),
                                 new KeyValue(lsay.translateXProperty(), 0, Interpolator.EASE_IN)));
                 timeLine.getKeyFrames().add(
-                        new KeyFrame(Duration.seconds(1), new KeyValue(lsay.opacityProperty(), 1)));
+                        new KeyFrame(Duration.seconds(1), new KeyValue(lsay.opacityProperty(), 1)));break;
             }
         }
         return my_timeLine;
@@ -642,10 +667,22 @@ public class SecondPhaseGUI extends GridPane {
 
     public void add_belote_to_say(RoomPosition who, MyTimeLine say, String belote) {
         switch (who) {
-            case BOTTOM -> say.add_text(bsay, belote);
-            case RIGHT -> say.add_text(rsay, belote);
-            case TOP -> say.add_text(tsay, belote);
-            case LEFT -> say.add_text(lsay, belote);
+            case BOTTOM : {
+                say.add_text(bsay, belote);
+                break;
+            }
+            case RIGHT : {
+                say.add_text(rsay, belote);
+                break;
+            }
+            case TOP : {
+                say.add_text(tsay, belote);
+                break;
+            }
+            case LEFT : {
+                say.add_text(lsay, belote);
+                break;
+            }
         }
     }
 
@@ -657,29 +694,29 @@ public class SecondPhaseGUI extends GridPane {
                 vbox.setOpacity(0);
                 Timeline timeLine = new Timeline();
                 switch (position) {
-                    case BOTTOM -> {
+                    case BOTTOM : {
                         vbox.setTranslateY(bcard.getLayoutY());
                         timeLine.getKeyFrames().add(
                                 new KeyFrame(Duration.seconds(3),
-                                        new KeyValue(vbox.translateYProperty(), 0, Interpolator.EASE_IN)));
+                                        new KeyValue(vbox.translateYProperty(), 0, Interpolator.EASE_IN)));break;
                     }
-                    case RIGHT -> {
+                    case RIGHT : {
                         vbox.setTranslateX(rcard.getLayoutX());
                         timeLine.getKeyFrames().add(
                                 new KeyFrame(Duration.seconds(3),
-                                        new KeyValue(vbox.translateXProperty(), 0, Interpolator.EASE_IN)));
+                                        new KeyValue(vbox.translateXProperty(), 0, Interpolator.EASE_IN)));break;
                     }
-                    case TOP -> {
+                    case TOP : {
                         vbox.setTranslateY(-tcard.getLayoutY());
                         timeLine.getKeyFrames().add(
                                 new KeyFrame(Duration.seconds(3),
-                                        new KeyValue(vbox.translateYProperty(), 0, Interpolator.EASE_IN)));
+                                        new KeyValue(vbox.translateYProperty(), 0, Interpolator.EASE_IN)));break;
                     }
-                    case LEFT -> {
+                    case LEFT : {
                         vbox.setTranslateX(-lcard.getLayoutX());
                         timeLine.getKeyFrames().add(
                                 new KeyFrame(Duration.seconds(3),
-                                        new KeyValue(vbox.translateXProperty(), 0, Interpolator.EASE_IN)));
+                                        new KeyValue(vbox.translateXProperty(), 0, Interpolator.EASE_IN)));break;
                     }
                 }
                 timeLine.getKeyFrames().add(

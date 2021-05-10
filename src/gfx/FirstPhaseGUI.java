@@ -272,10 +272,22 @@ public class FirstPhaseGUI extends GridPane {
 
     public void setup_first_turn() {
         switch (handler.getGame().getCurrentPosition()) {
-            case BOTTOM -> current_turn = bottomTurn;
-            case RIGHT -> current_turn = rightTurn;
-            case TOP -> current_turn = topTurn;
-            case LEFT -> current_turn = leftTurn;
+            case BOTTOM: {
+                current_turn = bottomTurn;
+                break;
+            }
+            case RIGHT: {
+                current_turn = rightTurn;
+                break;
+            }
+            case TOP: {
+                current_turn = topTurn;
+                break;
+            }
+            case LEFT: {
+                current_turn = leftTurn;
+                break;
+            }
         }
         current_turn.init_turn();
     }

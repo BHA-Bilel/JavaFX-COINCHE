@@ -24,10 +24,18 @@ public enum Suit {
 
     @Override
     public String toString() {
-        return switch (this) {
-            case Hearts, Spades, Diamonds, Clubs -> this.name();
-            case SA -> "No Trumps";
-            case TA -> "All Trumps";
-        };
+        switch (this) {
+            case Hearts:
+            case Spades:
+            case Diamonds:
+            case Clubs:
+                return this.name();
+            case SA:
+                return "No Trumps";
+            case TA:
+                return "All Trumps";
+            default:
+                return "";
+        }
     }
 }

@@ -19,30 +19,72 @@ public class TurnTriangle extends VBox {
         this.position = position;
         triangle = new JFXButton();
         switch (position) {
-            case BOTTOM, TOP -> triangle.setPrefWidth(50);
-            case RIGHT, LEFT -> triangle.setPrefHeight(50);
+            case BOTTOM:
+            case TOP: {
+                triangle.setPrefWidth(50);
+                break;
+            }
+            case RIGHT:
+            case LEFT: {
+                triangle.setPrefHeight(50);
+                break;
+            }
         }
         if (flip)
             switch (position) {
-                case BOTTOM -> triangle.setStyle("-fx-background-color: blue;" + " -fx-shape: 'M 0 4 L 4 4 L 2 0 Z'");
-                case RIGHT -> triangle.setStyle("-fx-background-color: blue;" + " -fx-shape: 'M 4 0 L 4 4 L 0 2 Z'");
-                case TOP -> triangle.setStyle("-fx-background-color: blue;" + " -fx-shape: 'M 0 0 L 4 0 L 2 4 Z'");
-                case LEFT -> triangle.setStyle("-fx-background-color: blue;" + " -fx-shape: 'M 0 0 L 0 4 L 4 2 Z'");
+                case BOTTOM: {
+                    triangle.setStyle("-fx-background-color: blue;" + " -fx-shape: 'M 0 4 L 4 4 L 2 0 Z'");
+                    break;
+                }
+                case RIGHT: {
+                    triangle.setStyle("-fx-background-color: blue;" + " -fx-shape: 'M 4 0 L 4 4 L 0 2 Z'");
+                    break;
+                }
+                case TOP: {
+                    triangle.setStyle("-fx-background-color: blue;" + " -fx-shape: 'M 0 0 L 4 0 L 2 4 Z'");
+                    break;
+                }
+                case LEFT: {
+                    triangle.setStyle("-fx-background-color: blue;" + " -fx-shape: 'M 0 0 L 0 4 L 4 2 Z'");
+                    break;
+                }
             }
         else
             switch (position) {
-                case BOTTOM -> triangle.setStyle("-fx-background-color: blue; -fx-shape: 'M 0 0 L 4 0 L 2 4 Z'");
-                case RIGHT -> triangle.setStyle("-fx-background-color: blue; -fx-shape: 'M 0 0 L 0 4 L 4 2 Z'");
-                case TOP -> triangle.setStyle("-fx-background-color: blue; -fx-shape: 'M 0 4 L 4 4 L 2 0 Z'");
-                case LEFT -> triangle.setStyle("-fx-background-color: blue; -fx-shape: 'M 4 0 L 4 4 L 0 2 Z'");
+                case BOTTOM: {
+                    triangle.setStyle("-fx-background-color: blue; -fx-shape: 'M 0 0 L 4 0 L 2 4 Z'");
+                    break;
+                }
+                case RIGHT: {
+                    triangle.setStyle("-fx-background-color: blue; -fx-shape: 'M 0 0 L 0 4 L 4 2 Z'");
+                    break;
+                }
+                case TOP: {
+                    triangle.setStyle("-fx-background-color: blue; -fx-shape: 'M 0 4 L 4 4 L 2 0 Z'");
+                    break;
+                }
+                case LEFT: {
+                    triangle.setStyle("-fx-background-color: blue; -fx-shape: 'M 4 0 L 4 4 L 0 2 Z'");
+                    break;
+                }
             }
         triangle.setDisable(true);
         triangle.setOpacity(0);
         if (flip) {
             switch (position) {
-                case RIGHT, LEFT -> setAlignment(Pos.CENTER);
-                case BOTTOM -> setAlignment(Pos.CENTER_LEFT);
-                case TOP -> setAlignment(Pos.CENTER_RIGHT);
+                case RIGHT:
+                case LEFT: {
+                    setAlignment(Pos.CENTER);
+                    break;
+                }
+                case BOTTOM: {
+                    setAlignment(Pos.CENTER_LEFT);
+                    break;
+                }
+                case TOP: {
+                    setAlignment(Pos.CENTER_RIGHT);
+                    break;
+                }
             }
         } else
             setAlignment(Pos.CENTER);
@@ -82,18 +124,30 @@ public class TurnTriangle extends VBox {
     public Timeline disappear() {
         Timeline timeLine = new Timeline();
         switch (position) {
-            case BOTTOM -> timeLine.getKeyFrames().add(
-                    new KeyFrame(Duration.seconds(1),
-                            new KeyValue(triangle.translateYProperty(), 30, Interpolator.EASE_IN)));
-            case RIGHT -> timeLine.getKeyFrames().add(
-                    new KeyFrame(Duration.seconds(1),
-                            new KeyValue(triangle.translateXProperty(), 30, Interpolator.EASE_IN)));
-            case TOP -> timeLine.getKeyFrames().add(
-                    new KeyFrame(Duration.seconds(1),
-                            new KeyValue(triangle.translateYProperty(), -30, Interpolator.EASE_IN)));
-            case LEFT -> timeLine.getKeyFrames().add(
-                    new KeyFrame(Duration.seconds(1),
-                            new KeyValue(triangle.translateXProperty(), -30, Interpolator.EASE_IN)));
+            case BOTTOM: {
+                timeLine.getKeyFrames().add(
+                        new KeyFrame(Duration.seconds(1),
+                                new KeyValue(triangle.translateYProperty(), 30, Interpolator.EASE_IN)));
+                break;
+            }
+            case RIGHT: {
+                timeLine.getKeyFrames().add(
+                        new KeyFrame(Duration.seconds(1),
+                                new KeyValue(triangle.translateXProperty(), 30, Interpolator.EASE_IN)));
+                break;
+            }
+            case TOP: {
+                timeLine.getKeyFrames().add(
+                        new KeyFrame(Duration.seconds(1),
+                                new KeyValue(triangle.translateYProperty(), -30, Interpolator.EASE_IN)));
+                break;
+            }
+            case LEFT: {
+                timeLine.getKeyFrames().add(
+                        new KeyFrame(Duration.seconds(1),
+                                new KeyValue(triangle.translateXProperty(), -30, Interpolator.EASE_IN)));
+                break;
+            }
         }
         timeLine.getKeyFrames().add(
                 new KeyFrame(Duration.seconds(1), new KeyValue(triangle.opacityProperty(), 0)));
@@ -102,29 +156,33 @@ public class TurnTriangle extends VBox {
 
     private void enlighten(Timeline timeLine) {
         switch (position) {
-            case BOTTOM -> {
+            case BOTTOM: {
                 triangle.setTranslateY(30);
                 timeLine.getKeyFrames().add(
                         new KeyFrame(Duration.seconds(1),
                                 new KeyValue(triangle.translateYProperty(), 0, Interpolator.EASE_IN)));
+                break;
             }
-            case RIGHT -> {
+            case RIGHT: {
                 triangle.setTranslateX(30);
                 timeLine.getKeyFrames().add(
                         new KeyFrame(Duration.seconds(1),
                                 new KeyValue(triangle.translateXProperty(), 0, Interpolator.EASE_IN)));
+                break;
             }
-            case TOP -> {
+            case TOP: {
                 triangle.setTranslateY(-30);
                 timeLine.getKeyFrames().add(
                         new KeyFrame(Duration.seconds(1),
                                 new KeyValue(triangle.translateYProperty(), 0, Interpolator.EASE_IN)));
+                break;
             }
-            case LEFT -> {
+            case LEFT: {
                 triangle.setTranslateX(-30);
                 timeLine.getKeyFrames().add(
                         new KeyFrame(Duration.seconds(1),
                                 new KeyValue(triangle.translateXProperty(), 0, Interpolator.EASE_IN)));
+                break;
             }
         }
         timeLine.getKeyFrames().add(
