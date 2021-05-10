@@ -85,7 +85,7 @@ public class Bid extends VBox {
         }
     }
 
-    public int result(boolean won, int total_pts, int declarations) {
+    public int result(boolean won, boolean took_all_hands, int total_pts, int declarations) {
         int mode = total_pts % 10;
         total_pts += -mode + (mode > 4 ? 10 : 0);
         boolean sa_ta = trump == Suit.SA || trump == Suit.TA;
@@ -93,16 +93,25 @@ public class Bid extends VBox {
         if (sa_ta) {
             capot_value = 260;
         }
-        if (won) {
-            return (capot ? (capot_value + value) : value) * coinche + declarations
-                    + (coinche > 1 ? (sa_ta ? 260 : 160) : 0) + total_pts;
+        if (coinche > 1) {
+            return (capot ? capot_value + value : value) * coinche + declarations
+                    + (sa_ta ? 260 : 160)
+                    + (took_all_hands ? total_pts : 0);
         } else {
-            return (capot ? (capot_value + value) : value) * coinche + declarations
-                    + (sa_ta ? 260 : 160);
+            if (won) {
+                return (capot ? capot_value + value : value) * coinche + declarations + total_pts;
+            } else {
+                return (capot ? (capot_value + value) : value) * coinche + declarations
+                        + (sa_ta ? 260 : 160) + (took_all_hands ? total_pts : 0);
+            }
         }
     }
 
     public void reset_bid() {
+        trump = null;
+        value = 0;
+        coinche = 1;
+        capot = false;
         Platform.runLater(() -> {
             text.setText("");
             sign.setImage(null);
@@ -118,12 +127,22 @@ public class Bid extends VBox {
         coinche = 4;
     }
 
-    public boolean isCoinchedOrSurcoinched() {
+    public boolean isCorS() { // isCoinchedOrSurcoinched
         return coinche > 1;
     }
 
     public boolean youBought() {
         return position == RoomPosition.BOTTOM || position == RoomPosition.TOP;
+    }
+
+    public String one_line_str() {
+        String ret = toString();
+        return ret.replaceAll("\n", " ");
+    }
+
+    public int fullValue() {
+        boolean sa_ta = trump == Suit.TA || trump == Suit.SA;
+        return (capot ? (sa_ta ? 260 : 250) : 0) + value;
     }
 
     public Suit getTrump() {
@@ -144,11 +163,6 @@ public class Bid extends VBox {
 
     public RoomPosition getPosition() {
         return position;
-    }
-
-    public String one_line_str() {
-        String ret = toString();
-        return ret.replaceAll("\n", " ");
     }
 
     @Override

@@ -121,7 +121,7 @@ public class Board extends StackPane {
                     initSecondPhase();
                 return true;
             }
-            if (latestBid != null && latestBid.isCoinchedOrSurcoinched()) {
+            if (latestBid != null && latestBid.isCorS()) {
                 handler.getGame().switchTurn();
                 adapt = true;
                 passCount = 2;

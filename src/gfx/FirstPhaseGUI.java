@@ -134,9 +134,9 @@ public class FirstPhaseGUI extends GridPane {
 
         coincher = new JFXButton("coincher!");
         coincher.setOnAction(e -> {
-            if (board.latestBid == null || board.latestBid.youBought() && !board.latestBid.isCoinchedOrSurcoinched())
+            if (board.latestBid == null || board.latestBid.youBought() && !board.latestBid.isCorS())
                 return;
-            if (!board.latestBid.isCoinchedOrSurcoinched()) {
+            if (!board.latestBid.isCorS()) {
                 board.buy(RoomPosition.BOTTOM, board.latestBid.getTrump(), -2, capot.isSelected());
             } else if (handler.getGame().isYourTurn()) {
                 board.buy(RoomPosition.BOTTOM, board.latestBid.getTrump(), -4, capot.isSelected());

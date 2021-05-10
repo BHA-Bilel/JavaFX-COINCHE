@@ -4,10 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import gfx.Assets;
 import gfx.Board;
@@ -15,12 +12,7 @@ import gfx.LeftRightPane;
 import gfx.TopBottomPane;
 import javafx.scene.control.Alert;
 import javafx.scene.input.KeyCode;
-import model.Bid;
-import model.Card;
-import model.Combination;
-import model.Player;
-import model.Result;
-import model.Suit;
+import model.*;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
@@ -220,24 +212,29 @@ public class GameApp extends BorderPane {
         yourDec = 0;
         opDec = 0;
         List<Combination> current;
+        Map<ComboType, Integer> your_dec_map = new HashMap<>(), op_dec_map = new HashMap<>();
         current = bottomPlayer.getDeclarations();
         if (current != null)
             for (Combination comb : current) {
+                your_dec_map.merge(comb.getType(), 1, Integer::sum);
                 yourDec += comb.getType().getValue();
             }
         current = topPlayer.getDeclarations();
         if (current != null)
             for (Combination comb : current) {
+                your_dec_map.merge(comb.getType(), 1, Integer::sum);
                 yourDec += comb.getType().getValue();
             }
         current = leftPlayer.getDeclarations();
         if (current != null)
             for (Combination comb : current) {
+                op_dec_map.merge(comb.getType(), 1, Integer::sum);
                 opDec += comb.getType().getValue();
             }
         current = rightPlayer.getDeclarations();
         if (current != null)
             for (Combination comb : current) {
+                op_dec_map.merge(comb.getType(), 1, Integer::sum);
                 opDec += comb.getType().getValue();
             }
         Bid bid = board.getLatestBid();
@@ -253,36 +250,44 @@ public class GameApp extends BorderPane {
         int Yround_total = your_fold_pts + yourDec, OPround_total = op_fold_pts + opDec;
         int dedans = (sa_ta ? 260 : 160);
         boolean won;
+        boolean didnt_reach_bid, defender_got_more_pts, capot_fail, capot_bid_out_of_reach;
         if (board.getLatestBid().youBought()) { // YOU BOUGHT
-            if (Yround_total < bid.getValue() || OPround_total > Yround_total
-                    || bid.isCapot() && (yourDec < bid.getValue() || opPlies_count > 0)) { // LOST
+            didnt_reach_bid = Yround_total < bid.getValue();
+            defender_got_more_pts = OPround_total > Yround_total;
+            capot_fail = bid.isCapot() && opPlies_count > 0;
+            capot_bid_out_of_reach = bid.isCapot() && yourDec < bid.getValue();
+            if (didnt_reach_bid || defender_got_more_pts || capot_fail || capot_bid_out_of_reach) { // LOST
                 Yround_total = 0;
-                OPround_total = bid.result(false, 0, yourDec + opDec);
+                OPround_total = bid.result(false, yourPlies_count == 0, op_fold_pts, yourDec + opDec);
                 opponentPoints += OPround_total;
                 won = false;
             } else { // WON
-                Yround_total = bid.result(true, your_fold_pts, yourDec);
+                Yround_total = bid.result(true, opPlies_count == 0, your_fold_pts, yourDec + (bid.isCorS() ? opDec : 0));
                 yourPoints += Yround_total;
-                if (!bid.isCoinchedOrSurcoinched()) {
+                if (!bid.isCorS()) {
                     int mode = OPround_total % 10;
                     OPround_total += -mode + (mode > 4 ? 10 : 0);
                     opponentPoints += OPround_total;
-                    dedans = 0;} else {
+                    dedans = 0;
+                } else {
                     OPround_total = 0;
                 }
                 won = true;
             }
         } else { // OP BOUGHT
-            if (OPround_total < bid.getValue() || Yround_total > OPround_total
-                    || bid.isCapot() && (opDec < bid.getValue() || yourPlies_count > 0)) { // LOST
-                Yround_total = bid.result(false, 0, yourDec + opDec);
+            didnt_reach_bid = OPround_total < bid.getValue();
+            defender_got_more_pts = Yround_total > OPround_total;
+            capot_fail = bid.isCapot() && yourPlies_count > 0;
+            capot_bid_out_of_reach = bid.isCapot() && opDec < bid.getValue();
+            if (didnt_reach_bid || defender_got_more_pts || capot_fail || capot_bid_out_of_reach) { // LOST
+                Yround_total = bid.result(false, opPlies_count == 0, your_fold_pts, yourDec + opDec);
                 OPround_total = 0;
                 yourPoints += Yround_total;
                 won = false;
             } else { // WON
-                OPround_total = bid.result(true, op_fold_pts, opDec);
+                OPround_total = bid.result(true, yourPlies_count == 0, op_fold_pts, opDec + (bid.isCorS() ? yourDec : 0));
                 opponentPoints += OPround_total;
-                if (!bid.isCoinchedOrSurcoinched()) {
+                if (!bid.isCorS()) {
                     int mode = Yround_total % 10;
                     Yround_total += -mode + (mode > 4 ? 10 : 0);
                     yourPoints += Yround_total;
@@ -293,15 +298,57 @@ public class GameApp extends BorderPane {
                 won = true;
             }
         }
+        StringBuilder fail_reasons = new StringBuilder();
+        if (!won) {
+            List<String> reasons = new ArrayList<>();
+
+            if (didnt_reach_bid || capot_bid_out_of_reach)
+                reasons.add("Buyer didn't reach bid points!");
+            if (defender_got_more_pts)
+                reasons.add("Defender got more points!");
+            if (capot_fail)
+                reasons.add("Capot bid failed!");
+            int i = reasons.size() - 1;
+            while (i > -1) {
+                fail_reasons.append(reasons.get(i));
+                i--;
+                if (i > -1) {
+                    fail_reasons.append("\n");
+                }
+            }
+        }
+
         int fYround_total = Yround_total, fOPround_total = OPround_total, finalDedans = dedans;
+        String finalFail_reasons = fail_reasons.toString();
         Platform.runLater(() -> {
             board.getChildren().clear();
             result.setDisable(false);
-            result.update(board.getLatestBid(), won, finalDedans, your_fold_pts, op_fold_pts, fYround_total, fOPround_total, board.getBelote(),
-                    yourDec, opDec, yourPoints, opponentPoints);
+            result.update(board.getLatestBid(), won, finalFail_reasons, finalDedans,
+                    your_fold_pts, op_fold_pts,
+                    fYround_total, fOPround_total,
+                    yourPlies_count == 0, opPlies_count == 0,
+                    yourDec, opDec,
+                    get_dec_detail(your_dec_map), get_dec_detail(op_dec_map),
+                    yourPoints, opponentPoints);
             board.getScore().add(bid, yourPoints, opponentPoints);
             board.getChildren().add(result);
         });
+    }
+
+    private String get_dec_detail(Map<ComboType, Integer> dec_map) {
+        Iterator<Map.Entry<ComboType, Integer>> itr;
+        StringBuilder dec_detail = new StringBuilder();
+        dec_detail.append("(");
+        itr = dec_map.entrySet().iterator();
+        while (itr.hasNext()) {
+            Map.Entry<ComboType, Integer> entry = itr.next();
+            dec_detail
+                    .append(entry.getValue() > 1 ? entry.getValue() + " x " : "").append(entry.getKey().toString());
+            if (itr.hasNext())
+                dec_detail.append(" + ");
+        }
+        dec_detail.append(")");
+        return dec_detail.toString();
     }
 
     // GETTERS SETTERS
