@@ -1,12 +1,16 @@
 package bg.coinche.model;
 
+import bg.coinche.MainApp;
 import bg.coinche.gfx.Assets;
+import bg.coinche.lang.Language;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.Pos;
+import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 import shared.RoomPosition;
 
 public class Bid extends VBox {
@@ -16,18 +20,23 @@ public class Bid extends VBox {
     private int coinche = 1;
     private boolean capot;
     private final RoomPosition position;
-    private final ImageView sign;
-    private final Text text;
+    private final ImageView sign, Cchip;
+    private final Label text;
 
     public Bid(RoomPosition position) {
         this.position = position;
-        text = new Text();
-        text.setFont(Font.font(30));
+        text = new Label();
+        text.setMinSize(Label.USE_PREF_SIZE, Label.USE_PREF_SIZE);
         sign = new ImageView();
         sign.setPreserveRatio(true);
-        sign.setFitWidth(30);
+        sign.fitWidthProperty().bind(MainApp.turnSignProperty);
+        Cchip = new ImageView();
+        Cchip.setPreserveRatio(true);
+        Cchip.fitWidthProperty().bind(MainApp.dealerCchipProperty);
         setAlignment(Pos.TOP_LEFT);
-        Platform.runLater(() -> getChildren().addAll(text, sign));
+        spacingProperty().bind(MainApp.spacingProperty.multiply(.001));
+        styleProperty().bind(Bindings.concat("-fx-padding: ", MainApp.paddingProperty.asString()));
+        Platform.runLater(() -> getChildren().addAll(text, sign, Cchip));
     }
 
     public void bought(Suit trump, int value, boolean capot) {
@@ -36,8 +45,8 @@ public class Bid extends VBox {
         this.capot = capot;
         Platform.runLater(() -> {
             text.setText(toString());
-            if ((capot || value > 0) && trump.getIndex() < 4) {
-                sign.setImage(Assets.getSign(trump).getImage());
+            if ((capot || value > 0) && trump.ordinal() < 4) {
+                sign.setImage(Assets.getSign(trump));
             } else {
                 sign.setImage(null);
             }
@@ -45,51 +54,42 @@ public class Bid extends VBox {
     }
 
     public void setCoinche(boolean coincheOnly, Bid latestBid) {
+        if (coincheOnly) coinche();
+        else surcoinche();
         Platform.runLater(() -> {
-            if (latestBid.equals(this)) {
-                switch (position) {
-                    case TOP: {
-                        text.setText(text.getText() + " Surcoinche! ");
-                        break;
-                    }
-                    case LEFT:
-                    case RIGHT:
-                    case BOTTOM: {
-                        text.setText("Surcoinche!\n" + text.getText());
-                        break;
-                    }
-                }
-            } else {
-                text.setText(coincheOnly ? "Coinche!" : "Surcoinche!");
-                if (sign != null) {
-                    sign.setImage(null);
-                }
+            Cchip.setImage(Assets.getCoincheChip(coincheOnly));
+            if (!latestBid.equals(this)) {
+                text.setText("");
+                sign.setImage(null);
             }
         });
     }
 
     public void pass() {
         Platform.runLater(() -> {
-            text.setText("Pass");
+            text.setText(Language.PASS.getValue());
             sign.setImage(null);
         });
     }
 
     public void hide_unnecessary_bids(Bid latestBid) {
-        boolean keep = this.equals(latestBid) || text.getText().contains("Coinche") || text.getText().contains("Surcoinche");
-        if (!keep) {
-            Platform.runLater(() -> setOpacity(0));
-        }
+        boolean keep = this.equals(latestBid) || isCorS();
+        if (!keep) Platform.runLater(() -> setOpacity(0));
     }
 
-    public String pts_to_fail_contract(int dec) {
-        if (capot)
-            return "One fold" + (value > 0 ? ", or a higher declaration" : "");
-        else {
+    public StringProperty pts_to_fail_contract(int dec) {
+        if (capot) {
+            if (value > 0)
+                return Language.PTS_CONT_FAIL_C2;
+            else
+                return Language.PTS_CONT_FAIL_C1;
+        } else {
             boolean sa_ta = trump == Suit.TA || trump == Suit.SA;
             int fail = (sa_ta ? 260 + 2 : 162 + 1) - value + dec;
-            return fail < 0 ? "Contract out of range, You win !" :
-                    fail > (sa_ta ? 260 + 2 : 162 + 1) ? "Capot or more total points" : Integer.toString(fail);
+            StringProperty INT_FAIL = new SimpleStringProperty();
+            INT_FAIL.set(Integer.toString(fail));
+            return fail < 0 ? Language.CONTRACT_OUT_OF_RANGE :
+                    fail > (sa_ta ? 260 + 2 : 162 + 1) ? Language.CAPOT_MORE_PTS : INT_FAIL;
         }
     }
 
@@ -123,6 +123,7 @@ public class Bid extends VBox {
         Platform.runLater(() -> {
             text.setText("");
             sign.setImage(null);
+            Cchip.setImage(null);
             setOpacity(1);
         });
     }
@@ -177,15 +178,15 @@ public class Bid extends VBox {
     public String toString() {
         String ret;
         if (value == 0 && !capot)
-            return "Pass";
+            return Language.PASS.getValue();
         else {
             if (capot) {
-                ret = "Capot" + (value > 0 ? " + " + value : "");
+                ret = Language.CAPOT.getValue() + (value > 0 ? " + " + value : "");
             } else {
                 ret = value + "";
             }
         }
-        if (trump.getIndex() > 3)
+        if (trump.ordinal() > 3)
             switch (position) {
                 case TOP:
                 case BOTTOM: {
@@ -203,12 +204,9 @@ public class Bid extends VBox {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (this.getClass() != obj.getClass())
-            return false;
+        if (this == obj) return true;
+        if (obj == null) return false;
+        if (this.getClass() != obj.getClass()) return false;
         Bid bid = (Bid) obj;
         return trump == bid.trump && value == bid.value && capot == bid.capot;
     }

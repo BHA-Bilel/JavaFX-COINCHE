@@ -1,18 +1,11 @@
 package bg.coinche.gfx;
 
 import bg.coinche.game.Handler;
-import javafx.application.Platform;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Paint;
-import javafx.scene.shape.Circle;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 import bg.coinche.model.*;
+import javafx.application.Platform;
+import javafx.geometry.Pos;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.VBox;
 import shared.RoomPosition;
 
 import java.util.List;
@@ -21,40 +14,18 @@ public class LeftRightPane extends VBox {
 
     private final Handler handler;
     private Player player;
-    private final Pane dealer;
+    private final ImageView dealer;
     private final RoomPosition panePosition;
     private final Bid bid;
 
-    public LeftRightPane(Handler handler, RoomPosition panePosition, String name_str) {
+    public LeftRightPane(Handler handler, RoomPosition panePosition) {
         this.panePosition = panePosition;
         this.handler = handler;
         setAlignment(Pos.CENTER);
-
-        dealer = setup_dealer_chip();
-
-        HBox hbox = new HBox();
-        hbox.setAlignment(Pos.CENTER);
-        Text name = new Text(name_str);
-        name.setFont(Font.font(30));
-        bid = new Bid(panePosition);
-        VBox.setMargin(bid, new Insets(10, 0, 10, 0));
-        getChildren().addAll(name, bid, dealer);
-    }
-
-    private VBox setup_dealer_chip() {
-        Circle circle = new Circle(15);
-        circle.setFill(Paint.valueOf("white"));
-        circle.setStroke(Paint.valueOf("black"));
-        Text dealer_txt = new Text("D");
-        dealer_txt.setFont(Font.font(20));
-        StackPane chip_sp = new StackPane();
-        chip_sp.getChildren().addAll(circle, dealer_txt);
-        VBox.setMargin(chip_sp, new Insets(10, 0, 10, 0));
-        VBox dealer = new VBox(5);
-        dealer.setAlignment(Pos.CENTER);
-        dealer.getChildren().addAll(chip_sp);
+        dealer = Assets.getDealerChip();
         dealer.setOpacity(0);
-        return dealer;
+        bid = new Bid(panePosition);
+        getChildren().addAll(bid, dealer);
     }
 
     public void bought(Suit anySuit, int bid, boolean capot) {
@@ -63,11 +34,8 @@ public class LeftRightPane extends VBox {
 
     public void updateDealer() {
         Platform.runLater(() -> {
-            if (panePosition == handler.getGame().getDealer()) {
-                dealer.setOpacity(1);
-            } else if (panePosition.next() == handler.getGame().getDealer()) {
-                dealer.setOpacity(0);
-            }
+            if (handler.getGame().getDealer().equals(panePosition)) dealer.setOpacity(1);
+            else if (handler.getGame().getDealer().equals(panePosition.next())) dealer.setOpacity(0);
         });
     }
 

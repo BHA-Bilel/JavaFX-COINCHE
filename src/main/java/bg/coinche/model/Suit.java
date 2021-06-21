@@ -1,41 +1,21 @@
 package bg.coinche.model;
 
+import bg.coinche.lang.Language;
+import javafx.beans.property.StringProperty;
+
 public enum Suit {
-    Hearts(0), Spades(1), Diamonds(2), Clubs(3), SA(4), TA(5);
 
-    private final int index;
+    Hearts(Language.HEARTS), Spades(Language.SPADES), Diamonds(Language.DIAMONDS), Clubs(Language.CLUBS),
+    SA(Language.NT), TA(Language.AT);
 
-    Suit(int index) {
-        this.index = index;
-    }
+    private final StringProperty name;
 
-    public static Suit get(int suitIndex) {
-        for (Suit name : Suit.values()) {
-            if (suitIndex == name.getIndex()) {
-                return name;
-            }
-        }
-        return null;
-    }
-
-    public int getIndex() {
-        return index;
+    Suit(StringProperty name) {
+        this.name = name;
     }
 
     @Override
     public String toString() {
-        switch (this) {
-            case Hearts:
-            case Spades:
-            case Diamonds:
-            case Clubs:
-                return this.name();
-            case SA:
-                return "No Trumps";
-            case TA:
-                return "All Trumps";
-            default:
-                return "";
-        }
+        return name.getValue();
     }
 }

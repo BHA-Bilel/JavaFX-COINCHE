@@ -1,74 +1,73 @@
 package bg.coinche.gfx;
 
+import bg.coinche.MainApp;
 import com.jfoenix.controls.JFXButton;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import shared.RoomPosition;
 
 public class TurnTriangle extends VBox {
-    public final RoomPosition position;
-    public TurnTriangle next;
+
+    public RoomPosition position;
     public JFXButton triangle;
+    public TurnTriangle next;
 
     public TurnTriangle(RoomPosition position, boolean flip) {
         this.position = position;
         triangle = new JFXButton();
-        switch (position) {
-            case BOTTOM:
-            case TOP: {
-                triangle.setPrefWidth(50);
-                break;
-            }
-            case RIGHT:
-            case LEFT: {
-                triangle.setPrefHeight(50);
-                break;
-            }
-        }
+        triangle.prefWidthProperty().bind(MainApp.turnSignProperty);
+        triangle.prefHeightProperty().bind(MainApp.turnSignProperty);
+        triangle.minHeightProperty().bind(MainApp.turnSignProperty);
+        triangle.minWidthProperty().bind(MainApp.turnSignProperty);
+        triangle.maxHeightProperty().bind(MainApp.turnSignProperty);
+        triangle.maxWidthProperty().bind(MainApp.turnSignProperty);
         if (flip)
             switch (position) {
                 case BOTTOM: {
-                    triangle.setStyle("-fx-background-color: blue;" + " -fx-shape: 'M 0 4 L 4 4 L 2 0 Z'");
+                    triangle.setStyle("-fx-shape: 'M 0 4 L 4 4 L 2 0 Z'");
                     break;
                 }
                 case RIGHT: {
-                    triangle.setStyle("-fx-background-color: blue;" + " -fx-shape: 'M 4 0 L 4 4 L 0 2 Z'");
+                    triangle.setStyle("-fx-shape: 'M 4 0 L 4 4 L 0 2 Z'");
                     break;
                 }
                 case TOP: {
-                    triangle.setStyle("-fx-background-color: blue;" + " -fx-shape: 'M 0 0 L 4 0 L 2 4 Z'");
+                    triangle.setStyle("-fx-shape: 'M 0 0 L 4 0 L 2 4 Z'");
                     break;
                 }
                 case LEFT: {
-                    triangle.setStyle("-fx-background-color: blue;" + " -fx-shape: 'M 0 0 L 0 4 L 4 2 Z'");
+                    triangle.setStyle("-fx-shape: 'M 0 0 L 0 4 L 4 2 Z'");
                     break;
                 }
             }
         else
             switch (position) {
                 case BOTTOM: {
-                    triangle.setStyle("-fx-background-color: blue; -fx-shape: 'M 0 0 L 4 0 L 2 4 Z'");
+                    triangle.setStyle("-fx-shape: 'M 0 0 L 4 0 L 2 4 Z'");
                     break;
                 }
                 case RIGHT: {
-                    triangle.setStyle("-fx-background-color: blue; -fx-shape: 'M 0 0 L 0 4 L 4 2 Z'");
+                    triangle.setStyle("-fx-shape: 'M 0 0 L 0 4 L 4 2 Z'");
                     break;
                 }
                 case TOP: {
-                    triangle.setStyle("-fx-background-color: blue; -fx-shape: 'M 0 4 L 4 4 L 2 0 Z'");
+                    triangle.setStyle("-fx-shape: 'M 0 4 L 4 4 L 2 0 Z'");
                     break;
                 }
                 case LEFT: {
-                    triangle.setStyle("-fx-background-color: blue; -fx-shape: 'M 4 0 L 4 4 L 0 2 Z'");
+                    triangle.setStyle("-fx-shape: 'M 4 0 L 4 4 L 0 2 Z'");
                     break;
                 }
             }
         triangle.setDisable(true);
+        triangle.getStyleClass().add("turn");
         triangle.setOpacity(0);
         if (flip) {
             switch (position) {
@@ -91,33 +90,47 @@ public class TurnTriangle extends VBox {
         getChildren().add(triangle);
     }
 
+    public TurnTriangle(boolean flip) {
+        triangle = new JFXButton();
+        triangle.prefWidthProperty().bind(MainApp.turnSignProperty);
+        triangle.prefHeightProperty().bind(MainApp.turnSignProperty);
+        triangle.minHeightProperty().bind(MainApp.turnSignProperty);
+        triangle.minWidthProperty().bind(MainApp.turnSignProperty);
+        triangle.maxHeightProperty().bind(MainApp.turnSignProperty);
+        triangle.maxWidthProperty().bind(MainApp.turnSignProperty);
+        if (flip) {
+            triangle.setStyle("-fx-shape: 'M 0 4 L 4 4 L 2 0 Z'");
+            triangle.getStyleClass().add("take-place");
+        } else {
+            triangle.setStyle("-fx-shape: 'M 0 0 L 4 0 L 2 4 Z'");
+            triangle.getStyleClass().add("kick");
+        }
+        setAlignment(Pos.CENTER);
+        getChildren().add(triangle);
+    }
+
+    public void setOnAction(EventHandler<ActionEvent> e) {
+        triangle.setOnAction(e);
+    }
+
     public static void adapt_turn(TurnTriangle current_turn) {
         Timeline timeLine = new Timeline();
         TurnTriangle old = current_turn.next;
-        while (old.triangle.getOpacity() != 1)
-            old = old.next;
-        if (old != current_turn) {
-            timeLine = old.disappear();
-        }
+        while (old.triangle.getOpacity() != 1) old = old.next;
+        if (old != current_turn) timeLine = old.disappear();
         current_turn.enlighten(timeLine);
-        timeLine.setAutoReverse(false);
-        timeLine.setCycleCount(1);
         timeLine.play();
     }
 
     public void init_turn() {
         Timeline timeLine = new Timeline();
         enlighten(timeLine);
-        timeLine.setAutoReverse(false);
-        timeLine.setCycleCount(1);
         timeLine.play();
     }
 
     public void switch_turn() {
         Timeline timeLine = disappear();
         next.enlighten(timeLine);
-        timeLine.setAutoReverse(false);
-        timeLine.setCycleCount(1);
         timeLine.play();
     }
 
@@ -200,12 +213,9 @@ public class TurnTriangle extends VBox {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (this.getClass() != obj.getClass())
-            return false;
+        if (this == obj) return true;
+        if (obj == null) return false;
+        if (this.getClass() != obj.getClass()) return false;
         TurnTriangle turn = (TurnTriangle) obj;
         return position == turn.position;
     }

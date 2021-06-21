@@ -3,6 +3,19 @@ package shared;
 public enum RoomPosition {
     BOTTOM, RIGHT, TOP, LEFT;
 
+    public RoomPosition nextPlayerToNotify() {
+        switch (this) {
+            case BOTTOM:
+                return RIGHT;
+            case RIGHT:
+                return TOP;
+            case TOP:
+                return LEFT;
+            default:
+                return null;
+        }
+    }
+
     public static RoomPosition getPositionBasedOnPlayerPosition(RoomPosition my_pos, RoomPosition position) {
         switch (my_pos) {
             case BOTTOM:
@@ -35,14 +48,15 @@ public enum RoomPosition {
 
     public static RoomPosition getPositionByPlayerID(int playerID) {
         // get your position based on your playerID (not translated to bottom)
-        if (playerID == 1) {
-            return BOTTOM;
-        } else if (playerID == 2) {
-            return RIGHT;
-        } else if (playerID == 3) {
-            return TOP;
-        } else {
-            return LEFT;
+        switch (playerID) {
+            case 2:
+                return RIGHT;
+            case 3:
+                return TOP;
+            case 4:
+                return LEFT;
+            default: // case 1
+                return BOTTOM;
         }
     }
 
@@ -111,4 +125,6 @@ public enum RoomPosition {
         }
         return null;
     }
+
+
 }

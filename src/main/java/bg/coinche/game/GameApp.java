@@ -1,11 +1,15 @@
 package bg.coinche.game;
 
+import bg.coinche.MainApp;
 import bg.coinche.gfx.Assets;
 import bg.coinche.gfx.Board;
 import bg.coinche.gfx.LeftRightPane;
 import bg.coinche.gfx.TopBottomPane;
+import bg.coinche.lang.Language;
+import bg.coinche.popup.MyAlert;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -13,10 +17,10 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import bg.coinche.model.*;
 import shared.RoomPosition;
+import shared.coinche.CoincheComm;
+import shared.coinche.CoincheMsg;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.util.*;
 
@@ -25,18 +29,17 @@ public class GameApp extends BorderPane {
     // NETWORK
     private int yourPoints, opponentPoints;
     private int playerID;
-    private final BuyThread buyThread;
-    private final PlayThread playThread;
+    private final GameClient gameClient;
     private boolean playable = false;
-
+    private final Map<RoomPosition, ArrayList<Combination>> decl;
     // GUI
     private AnimationTimer timer;
     private final Handler handler;
     private Player bottomPlayer, leftPlayer, topPlayer, rightPlayer;
     private RoomPosition dealer;
     private RoomPosition currentPosition;
-    private ArrayList<Card> playerCards;
     private Result result;
+    private MyAlert results_alert;
     private Card selectedCard;
     private LeftRightPane leftPane, rightPane;
     private TopBottomPane topPane, bottomPane;
@@ -44,7 +47,23 @@ public class GameApp extends BorderPane {
     public int parties_won, parties_lost;
     private int yourDec;
     private int opDec;
+    boolean tabClicked = false;
 
+    public GameApp(Socket socket) {
+        decl = new HashMap<>();
+        handler = new Handler(this);
+        gameClient = new GameClient(socket);
+        gameClient.handshake();
+        createGUI();
+        gameClient.first_game();
+        gameClient.start();
+    }
+
+    private void createGUI() {
+        Assets.init_cards();
+        initPanes();
+        initPlayers();
+    }
 
     private void updateDealerGUI() {
         bottomPane.updateDealer();
@@ -61,69 +80,56 @@ public class GameApp extends BorderPane {
         yourPoints = 0;
         opponentPoints = 0;
         board.getScore().getItems().clear();
-        startNewGame();
     }
 
     public boolean isFinished() {
         boolean finished = yourPoints >= 3000 || opponentPoints >= 3000;
         if (finished) {
-            printResults();
+            printResults(false);
         }
         return finished;
     }
 
-    private void printResults() {
-        boolean youWon = yourPoints > opponentPoints;
-        if (youWon) {
-            parties_won++;
-        } else {
-            parties_lost++;
-        }
+    public void printResults(boolean shortcut) {
+        if (results_alert != null && results_alert.isShowing())
+            if (shortcut) return;
+            else results_alert.close();
         int tempyourPoints = yourPoints, tempopponentPoints = opponentPoints;
         Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Game");
-            alert.setHeaderText("Results");
-            String text = "Party's over, " + (youWon ? " You won!" : "You lost!") + "\n";
-            text += "Your points : " + tempyourPoints + "\n";
-            text += "Opponent points : " + tempopponentPoints + "\n\n";
-            text += "Total parties won : " + "\n";
-            text += "Your team : " + parties_won + "\n";
-            text += "Opponents team : " + parties_lost;
-            alert.setContentText(text);
-            alert.show();
+            StringProperty header;
+            if (shortcut) header = Language.CURRENT_SC;
+            else {
+                if (yourPoints > opponentPoints) {
+                    header = Language.YOU_WON;
+                    parties_won++;
+                } else if (yourPoints < opponentPoints) {
+                    header = Language.YOU_LOST;
+                    parties_lost++;
+                } else {
+                    header = Language.CURRENT_SC;
+                }
+            }
+            String text;
+            text = Language.YOUR_PTS.getValue() + tempyourPoints + "\n";
+            text += Language.OP_PTS.getValue() + tempopponentPoints + "\n\n";
+            text += Language.TOTAL_PT_WON.getValue() + "\n";
+            text += Language.YOUR_TEAM.getValue() + parties_won + "\n";
+            text += Language.OP_TEAM.getValue() + parties_lost;
+            if (results_alert == null)
+                results_alert = new MyAlert(Alert.AlertType.INFORMATION, Language.GR_H, header, text);
+            else results_alert.update(header, text);
+            results_alert.show();
         });
-    }
-
-    boolean tabClicked = false;
-    public boolean first_game = true;
-
-    public GameApp(Socket buy_socket, Socket play_socket, Map<RoomPosition, String> players_names) {
-        buyThread = new BuyThread(buy_socket);
-        playThread = new PlayThread(play_socket);
-
-        handler = new Handler(this);
-        createGUI(players_names);
-        startNewMatch();
-    }
-
-    private void createGUI(Map<RoomPosition, String> players_names) {
-        Assets.init_cards();
-        initPanes(players_names);
     }
 
     public void setup_scene_events() {
         Scene scene = getScene();
         scene.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.TAB) {
-                tabClicked = true;
-            }
+            if (event.getCode() == KeyCode.TAB) tabClicked = true;
         });
 
         scene.setOnKeyReleased(event -> {
-            if (event.getCode() == KeyCode.TAB) {
-                tabClicked = false;
-            }
+            if (event.getCode() == KeyCode.TAB) tabClicked = false;
         });
 
         timer = new AnimationTimer() {
@@ -135,7 +141,7 @@ public class GameApp extends BorderPane {
         timer.start();
     }
 
-    public void disable_animatio_timer() {
+    public void disable_animation_timer() {
         timer.stop();
         board.show(false);
     }
@@ -144,7 +150,7 @@ public class GameApp extends BorderPane {
         timer.start();
     }
 
-    public void initPlayers() {
+    private void initPlayers() {
         bottomPlayer = new Player(RoomPosition.BOTTOM);
         leftPlayer = new Player(RoomPosition.LEFT);
         topPlayer = new Player(RoomPosition.TOP);
@@ -155,7 +161,7 @@ public class GameApp extends BorderPane {
         rightPane.setPlayer(rightPlayer);
     }
 
-    public void loadCards() {
+    public void loadCards(ArrayList<Card> playerCards) {
         bottomPlayer.setCards(playerCards);
         bottomPane.LoadCards();
     }
@@ -166,46 +172,23 @@ public class GameApp extends BorderPane {
         }
     }
 
-    public void startNewGame() {
-        board.resetPlies_count();
-        dealer = dealer.next();
-        currentPosition = dealer;
-        clearCards();
-        buyThread.getCards();
-        updateDealerGUI();
-        switchTurn();
-        board.setup_first_turn();
-    }
-
-    private void clearCards() {
-        bottomPane.removeCards();
-    }
-
-    protected void initPanes(Map<RoomPosition, String> players_names) {
+    protected void initPanes() {
         result = new Result();
-        result.setOnMouseClicked(e -> {
-            result.setDisable(true);
-            playThread.startAnotherGame();
-            if (isFinished())
-                startNewMatch();
-            else
-                startNewGame();
-        });
+        result.setOnMouseClicked(e -> board.set_buy_if_buying());
         board = new Board(handler);
         setCenter(board);
-        bottomPane = new TopBottomPane(handler, RoomPosition.BOTTOM, players_names.get(RoomPosition.BOTTOM));
+        bottomPane = new TopBottomPane(handler, RoomPosition.BOTTOM);
         bottomPane.setAlignment(Pos.BOTTOM_CENTER);
-        leftPane = new LeftRightPane(handler, RoomPosition.LEFT, players_names.get(RoomPosition.LEFT));
+        leftPane = new LeftRightPane(handler, RoomPosition.LEFT);
         leftPane.setAlignment(Pos.CENTER_LEFT);
-        topPane = new TopBottomPane(handler, RoomPosition.TOP, players_names.get(RoomPosition.TOP));
+        topPane = new TopBottomPane(handler, RoomPosition.TOP);
         topPane.setAlignment(Pos.TOP_CENTER);
-        rightPane = new LeftRightPane(handler, RoomPosition.RIGHT, players_names.get(RoomPosition.RIGHT));
+        rightPane = new LeftRightPane(handler, RoomPosition.RIGHT);
         rightPane.setAlignment(Pos.CENTER_RIGHT);
         setRight(rightPane);
         setLeft(leftPane);
         setTop(topPane);
         setBottom(bottomPane);
-        setPrefSize(1280, 920);
     }
 
     public void checkWinner(boolean der, int yourPlies_count, int opPlies_count) {
@@ -240,7 +223,7 @@ public class GameApp extends BorderPane {
         Bid bid = board.getLatestBid();
         boolean sa_ta = bid.getTrump() == Suit.SA || bid.getTrump() == Suit.TA;
         int your_fold_pts, op_fold_pts;
-        if (board.getLatestBid().youBought()) {
+        if (bid.youBought()) {
             your_fold_pts = board.getYourPts(sa_ta, opPlies_count == 0, (der ? 10 : 0));
             op_fold_pts = board.getOpponentPts(sa_ta, yourPlies_count == 0, (!der ? 10 : 0));
         } else {
@@ -251,7 +234,7 @@ public class GameApp extends BorderPane {
         int dedans = (sa_ta ? 260 : 160);
         boolean won;
         boolean didnt_reach_bid, defender_got_more_pts, capot_fail, capot_bid_out_of_reach;
-        if (board.getLatestBid().youBought()) { // YOU BOUGHT
+        if (bid.youBought()) { // YOU BOUGHT
             didnt_reach_bid = Yround_total < bid.getValue();
             defender_got_more_pts = OPround_total > Yround_total;
             capot_fail = bid.isCapot() && opPlies_count > 0;
@@ -302,12 +285,9 @@ public class GameApp extends BorderPane {
         if (!won) {
             List<String> reasons = new ArrayList<>();
 
-            if (didnt_reach_bid || capot_bid_out_of_reach)
-                reasons.add("Buyer didn't reach bid points!");
-            if (defender_got_more_pts)
-                reasons.add("Defender got more points!");
-            if (capot_fail)
-                reasons.add("Capot bid failed!");
+            if (didnt_reach_bid || capot_bid_out_of_reach) reasons.add(Language.REASONS_1.getValue());
+            if (defender_got_more_pts) reasons.add(Language.REASONS_2.getValue());
+            if (capot_fail) reasons.add(Language.REASONS_3.getValue());
             int i = reasons.size() - 1;
             while (i > -1) {
                 fail_reasons.append(reasons.get(i));
@@ -320,10 +300,9 @@ public class GameApp extends BorderPane {
 
         int fYround_total = Yround_total, fOPround_total = OPround_total, finalDedans = dedans;
         String finalFail_reasons = fail_reasons.toString();
+        startAnotherGame();
         Platform.runLater(() -> {
-            board.getChildren().clear();
-            result.setDisable(false);
-            result.update(board.getLatestBid(), won, finalFail_reasons, finalDedans,
+            result.update(bid, won, finalFail_reasons, finalDedans,
                     your_fold_pts, op_fold_pts,
                     fYround_total, fOPround_total,
                     yourPlies_count == 0, opPlies_count == 0,
@@ -331,7 +310,11 @@ public class GameApp extends BorderPane {
                     get_dec_detail(your_dec_map), get_dec_detail(op_dec_map),
                     yourPoints, opponentPoints);
             board.getScore().add(bid, yourPoints, opponentPoints);
+            board.getChildren().clear();
             board.getChildren().add(result);
+            reset_panes();
+            if (isFinished()) startNewMatch();
+            initBuyPhase();
         });
     }
 
@@ -350,8 +333,6 @@ public class GameApp extends BorderPane {
         dec_detail.append(")");
         return dec_detail.toString();
     }
-
-    // GETTERS SETTERS
 
     public boolean isYourTurn() {
         return currentPosition == RoomPosition.BOTTOM;
@@ -403,254 +384,185 @@ public class GameApp extends BorderPane {
 
     public void setNextTurn(RoomPosition winnerPosition) {
         currentPosition = winnerPosition;
-        board.adapt_turn();
     }
 
     public void closeGameApp() {
-        buyThread.closeConn();
-        playThread.closeConn();
+        gameClient.closeConn();
         Platform.runLater(() -> getChildren().clear());
     }
 
-    public class BuyThread extends Thread {
-
-        private DataInputStream dataIn;
-        private DataOutputStream dataOut;
-        private Socket socket;
-        private Thread waitThread;
-
-        public BuyThread(Socket socket) {
-            try {
-                this.socket = socket;
-                dataIn = new DataInputStream(socket.getInputStream());
-                dataOut = new DataOutputStream(socket.getOutputStream());
-                playerID = dataIn.readInt();
-                int D = dataIn.readInt();
-                dealer = RoomPosition.getCurrentPositionByPlayerID(RoomPosition.getPositionByPlayerID(playerID),
-                        (D) == 1 ? 4 : (D - 1) % 4);
-            } catch (IOException ignore) {
-            }
-        }
-
-        public void WaitForYourTurn() {
-            if (waitThread == null) {
-                waitThread = new Thread(() -> {
-                    boolean finished;
-                    do {
-                        int[] coor = receive();
-                        RoomPosition playerPosition = RoomPosition
-                                .getCurrentPositionByPlayerID(RoomPosition.getPositionByPlayerID(playerID), coor[0]);
-                        finished = board.buy(playerPosition, Suit.get(coor[1]), coor[2], coor[3] == 1);
-                    } while (!finished && currentPosition != RoomPosition.BOTTOM);
-                    waitThread = null;
-                });
-                waitThread.start();
-            }
-        }
-
-        public void startAnotherGame() {
-            try {
-                dataOut.writeInt(-1);
-                dataOut.flush();
-            } catch (IOException ignore) {
-            }
-        }
-
-        public void send(int suit, int value, boolean capot) {
-            try {
-                dataOut.writeInt(playerID);
-                dataOut.writeInt(suit);
-                dataOut.writeInt(value);
-                dataOut.writeInt(capot ? 1 : 0);
-                dataOut.flush();
-            } catch (IOException ignore) {
-            }
-        }
-
-        public int[] receive() {
-            int[] coor = new int[4];
-            try {
-                coor[0] = dataIn.readInt();
-                coor[1] = dataIn.readInt();
-                coor[2] = dataIn.readInt();
-                coor[3] = dataIn.readInt();
-            } catch (IOException ignore) {
-            }
-            return coor;
-        }
-
-        public void getCards() {
-            Thread getCardsThread = new Thread(() -> {
-                playerCards = new ArrayList<>();
-                for (int i = 0; i < 8; i++) {
-                    try {
-                        int cardSuit = dataIn.readInt();
-                        int cardRank = dataIn.readInt();
-                        playerCards.add(new Card(handler, cardSuit, cardRank, RoomPosition.BOTTOM));
-                    } catch (IOException ignore) {
-                    }
-                }
-                WaitForYourTurn();
-                initFirstPhase();
-            });
-            getCardsThread.start();
-        }
-
-        public void closeConn() {
-            try {
-                dataOut.close();
-                dataIn.close();
-                socket.close();
-            } catch (IOException ignore) {
-            }
+    public void initPlayPhase() {
+        decl.clear();
+        Suit trump = board.getLatestBid().getTrump();
+        if (trump == Suit.TA || trump == Suit.SA) setPlayable(true);
+        else if (playerID == 1) {
+            gameClient.send_msg(new CoincheMsg(CoincheComm.TRUMP,
+                    new Object[]{trump.ordinal()}));
         }
     }
 
-    private void initFirstPhase() {
-        if (!first_game) {
-            bottomPane.reset_bid_decs();
-            rightPane.reset_bid_decs();
-            topPane.reset_bid_decs();
-            leftPane.reset_bid_decs();
-        }
-        board.initFirstPhase();
+    public void bought(int suit, int bid, boolean capot) {
+        gameClient.send_msg(new CoincheMsg(CoincheComm.BOUGHT, new Object[]{playerID, suit, bid, capot}));
     }
 
-    public class PlayThread extends Thread {
+    public void coinched() {
+        gameClient.send_msg(new CoincheMsg(CoincheComm.COINCHED, new Object[]{playerID}));
+    }
 
-        private DataInputStream dataIn;
-        private DataOutputStream dataOut;
-        private Thread waitThread;
+    public void surcoinched() {
+        gameClient.send_msg(new CoincheMsg(CoincheComm.SURCOINCHED));
+    }
+
+    public void passed() {
+        gameClient.send_msg(new CoincheMsg(CoincheComm.PASSED));
+    }
+
+    public void showDecs_setPlayable() {
+        if (!decl.isEmpty()) board.announceDeclarations(
+                bottomPlayer.getDeclarations(), rightPlayer.getDeclarations(),
+                topPlayer.getDeclarations(), leftPlayer.getDeclarations());
+        else setPlayable(true);
+    }
+
+    public void Iplayed(int suit, int rank) {
+        setPlayable(false);
+        gameClient.send_msg(new CoincheMsg(CoincheComm.PLAYED, new Object[]{suit, rank}));
+    }
+
+    public void startAnotherGame() {
+        if (playerID == 1) gameClient.send_msg(new CoincheMsg(CoincheComm.GAME_END));
+    }
+
+    private class GameClient extends Thread {
         private Socket socket;
+        private ObjectInputStream objIn;
+        private ObjectOutputStream objOut;
+        private RoomPosition your_pos;
 
-        public PlayThread(Socket socket) {
+        public GameClient(Socket socket) {
             try {
                 this.socket = socket;
-                dataOut = new DataOutputStream(socket.getOutputStream());
-                dataIn = new DataInputStream(socket.getInputStream());
+                this.socket.setSoTimeout(0);
+                objOut = new ObjectOutputStream(socket.getOutputStream());
+                objIn = new ObjectInputStream(socket.getInputStream());
             } catch (IOException ignore) {
             }
         }
 
-        public void startAnotherGame() {
+        public void handshake() {
             try {
-                dataOut.writeInt(0);
-                dataOut.flush();
+                playerID = objIn.readInt();
+                int D = objIn.readInt();
+                your_pos = RoomPosition.getPositionByPlayerID(playerID);
+                dealer = RoomPosition.getCurrentPositionByPlayerID(your_pos, (D) == 1 ? 4 : (D - 1) % 4);
             } catch (IOException ignore) {
             }
         }
 
-        public void initSecondPhase() {
-            Thread declarationThread = new Thread(() -> {
-                try {
-                    dataOut.writeInt(board.getLatestBid().getTrump().getIndex()); // giving trump index
-                    dataOut.flush();
-                } catch (IOException ignore) {
-                }
-                boolean thereIS = false;
-                if (board.getLatestBid().getTrump() != Suit.TA && board.getLatestBid().getTrump() != Suit.SA) {
-                    Map<RoomPosition, ArrayList<Combination>> decl = new HashMap<>();
-                    RoomPosition position = RoomPosition.BOTTOM;
-                    for (int i = 0; i < 4; i++) {
-                        int suit = 0;
-                        int rank = 0;
-                        int order = 0;
-                        ArrayList<Combination> combos = new ArrayList<>();
-                        try {
-                            suit = dataIn.readInt();
-                            rank = dataIn.readInt();
-                            order = dataIn.readInt();
-                        } catch (IOException ignore) {
+        private void first_game() {
+            try {
+                CoincheMsg msg = (CoincheMsg) objIn.readObject();
+                loadCards(Card.to_list(handler, (Integer[]) msg.adt_data));
+                initBuyPhase();
+                board.set_buy_gui();
+            } catch (IOException | ClassNotFoundException ignore) {
+            }
+        }
+
+        @Override
+        public void run() {
+            try {
+                while (true) {
+                    CoincheMsg msg = (CoincheMsg) objIn.readObject();
+                    CoincheComm msg_comm = CoincheComm.values()[msg.comm];
+                    switch (msg_comm) {
+                        case PASSED: {
+                            board.pass();
+                            break;
                         }
-                        while (order != -1) {
-                            thereIS = true;
-                            Combination newComb = new Combination(position, suit, rank, order);
-                            combos.add(newComb);
-                            try {
-                                suit = dataIn.readInt();
-                                rank = dataIn.readInt();
-                                order = dataIn.readInt();
-                            } catch (IOException ignore) {
+                        case BOUGHT: {
+                            RoomPosition playerPosition = RoomPosition
+                                    .getCurrentPositionByPlayerID(your_pos, (int) msg.adt_data[0]);
+                            board.buy(playerPosition, Suit.values()[(int) msg.adt_data[1]], (int) msg.adt_data[2], (boolean) msg.adt_data[3]);
+                            break;
+                        }
+                        case COINCHED: {
+                            RoomPosition playerPosition = RoomPosition
+                                    .getCurrentPositionByPlayerID(your_pos, (int) msg.adt_data[0]);
+                            board.coinche(playerPosition);
+                            break;
+                        }
+                        case SURCOINCHED: {
+                            board.surcoinche();
+                            break;
+                        }
+                        case PLAYED: {
+                            board.play(new Card(handler, MainApp.announcePlayProperty, (int) msg.adt_data[0], (int) msg.adt_data[1], currentPosition));
+                            break;
+                        }
+                        case NEW_GAME: {
+                            setPlayable(false);
+                            loadCards(Card.to_list(handler, (Integer[]) msg.adt_data));
+                            break;
+                        }
+                        case DECLARATIONS: {
+                            if (msg.adt_data.length == 0) {
+                                RoomPosition temp_pos = this.your_pos;
+                                bottomPlayer.setDeclarations(decl.get(temp_pos));
+                                temp_pos = temp_pos.next();
+                                rightPlayer.setDeclarations(decl.get(temp_pos));
+                                temp_pos = temp_pos.next();
+                                topPlayer.setDeclarations(decl.get(temp_pos));
+                                temp_pos = temp_pos.next();
+                                leftPlayer.setDeclarations(decl.get(temp_pos));
+                                showDecs_setPlayable();
+                            } else {
+                                RoomPosition position = RoomPosition.values()[(int) msg.adt_data[0]];
+                                decl.put(position, Combination.to_list(position, (Integer[]) msg.adt_data));
                             }
+                            break;
                         }
-                        decl.put(position, combos);
-                        position = position.next();
-                    }
-                    if (thereIS) { // there is at least one declaration
-                        RoomPosition your_pos = RoomPosition.getPositionByPlayerID(playerID);
-                        bottomPlayer.setDeclarations(decl.get(your_pos));
-                        your_pos = your_pos.next();
-                        rightPlayer.setDeclarations(decl.get(your_pos));
-                        your_pos = your_pos.next();
-                        topPlayer.setDeclarations(decl.get(your_pos));
-                        your_pos = your_pos.next();
-                        leftPlayer.setDeclarations(decl.get(your_pos));
                     }
                 }
-                showDecs_setPlayable(thereIS);
-                WaitForYourTurn();
-            });
-            declarationThread.start();
-        }
-
-        public void showDecs_setPlayable(boolean thereIS) {
-            if (thereIS)
-                board.announceDeclarations(bottomPlayer.getDeclarations(), rightPlayer.getDeclarations(), topPlayer.getDeclarations(), leftPlayer.getDeclarations());
-            else setPlayable(true);
-        }
-
-        boolean finished;
-
-        public void WaitForYourTurn() {
-            if (waitThread == null) {
-                waitThread = new Thread(() -> {
-                    finished = false;
-                    for (int i = 0; i < 24; i++) { // 8 * 3
-                        int[] coor = receive();
-                        board.play(new Card(handler, coor[0], coor[1], currentPosition));
-                    }
-                    waitThread = null;
-                });
-
-                waitThread.start();
+            } catch (IOException | ClassNotFoundException ignore) {
             }
         }
 
-        public void send(int suit, int rank) {
+        private void send_msg(CoincheMsg msg) {
             try {
-                dataOut.writeInt(suit);
-                dataOut.writeInt(rank);
-                dataOut.flush();
+                objOut.writeObject(msg);
+                objOut.flush();
             } catch (IOException ignore) {
             }
-        }
-
-        public int[] receive() {
-            int[] coor = new int[2];
-            try {
-                coor[0] = dataIn.readInt();
-                coor[1] = dataIn.readInt();
-            } catch (IOException ignore) {
-            }
-            return coor;
         }
 
         public void closeConn() {
             try {
-                dataOut.close();
-                dataIn.close();
+                objOut.close();
+                objIn.close();
                 socket.close();
             } catch (IOException ignore) {
             }
         }
     }
 
-    public BuyThread getBuyThread() {
-        return buyThread;
+    public void initBuyPhase() {
+        dealer = dealer.next();
+        currentPosition = dealer;
+        updateDealerGUI();
+        switchTurn();
+        board.setupBuyPhase();
     }
 
-    public PlayThread getPlayThread() {
-        return playThread;
+    public void clearCards() {
+        bottomPane.clearCards();
+    }
+
+    public void reset_panes() {
+        bottomPane.reset_bid_decs();
+        rightPane.reset_bid_decs();
+        topPane.reset_bid_decs();
+        leftPane.reset_bid_decs();
     }
 
     public void hide_pass_bids() {

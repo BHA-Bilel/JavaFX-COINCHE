@@ -1,46 +1,28 @@
 package bg.coinche.model;
 
+import bg.coinche.lang.Language;
+import javafx.beans.property.StringProperty;
+
 public enum ComboType {
-    JackCarre(200, 6), NineCarre(150, 5), Carre(100, 4), Suite(100, 3), Annonce(50, 2), Tierce(20, 1), Belote(20, 0);
+    JackCarre(200, Language.JACK_CARRE), NineCarre(150, Language.NINE_CARRE),
+    Carre(100, Language.CARRE), Suite(100, Language.SUITE),
+    Annonce(50, Language.ANNONE), Tierce(20, Language.TIERCE),
+    Belote(20, Language.BELOTE);
 
-    private final int order;
     private final int value;
+    private final StringProperty name;
 
-    ComboType(int value, int order) {
+    ComboType(int value, StringProperty name) {
         this.value = value;
-        this.order = order;
-    }
-
-    public int getOrder() {
-        return order;
+        this.name = name;
     }
 
     public int getValue() {
         return value;
     }
 
-    public static ComboType get(int order) {
-        for (ComboType name : ComboType.values()) {
-            if (name.getOrder() == order) {
-                return name;
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public String toString() {
-        switch (this) {
-            case JackCarre :return  "Carr\u00E9 Valets";
-            case NineCarre :return  "Carr\u00E9 Neufs";
-            case Carre :return  "Carr\u00E9";
-            case Suite :return  "Suite";
-            case Annonce :return  "Annonce";
-            case Tierce :return  "Tierce";
-            case Belote :return  "Belote";
-            default:
-                return "";
-        }
+    public StringProperty getNameProperty() {
+        return name;
     }
 
 }
