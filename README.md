@@ -11,7 +11,7 @@
 
 ## Table of contents
 * [The second challenge](#the-second-challenge)
-* [Game Charachteristics](game-charachteristics)
+* [Game Charachteristics](#game-charachteristics)
 * [Install Instructions](#install-instructions)
 * [How to play](#how-to-play)
 * [Collection](#collection)
